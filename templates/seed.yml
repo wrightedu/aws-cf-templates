@@ -93,12 +93,6 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet
       RouteTableId: !Ref RouteTable
-  Ubuntu1IPAddress:
-    Type: 'AWS::EC2::EIP'
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref Ubuntu1Instance
   LinuxSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
