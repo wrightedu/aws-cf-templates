@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Testing area for AWS: This template builds a VPC with 2 Ubuntu servers, and windows server 2019 instance.
+  Testing area for AWS: This template builds a VPC with 1 Ubuntu server.
 Parameters:
   UbuntuInstanceType:
     Description: Ubuntu Server instance type
@@ -31,7 +31,8 @@ Mappings:
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-06c1d7addb12a814e
+      #HVM64: ami-06c1d7addb12a814e #old ami
+      HVM64: ami-072747b63d2046418 #new miniconda w/ scapy
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
@@ -93,12 +94,6 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet
       RouteTableId: !Ref RouteTable
-  Ubuntu1IPAddress:
-    Type: 'AWS::EC2::EIP'
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref Ubuntu1Instance
   LinuxSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -151,16 +146,6 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.20
-      UserData:
-        Fn::Base64:
-          !Sub |
-            #!/bin/bash -xe
-            apt-get update && \
-            apt-get install -y \
-              vim \
-              git \
-              wget \
-              openssl
       BlockDeviceMappings:
           - DeviceName: /dev/sda1
             Ebs:
