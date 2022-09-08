@@ -31,7 +31,7 @@ Mappings:
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-06c1d7addb12a814e
+      HVM64: ami-052efd3df9dad4825
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
@@ -147,10 +147,35 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              python \
+              nmap \
+              vim \
+              git \
+              wget \
+              make \
+              cmake \
+              openjdk-11-jdk \
+              build-essential \
+              python3 \
+              emacs-gtk \
+              dos2unix \
+              build-essential \
+              libssl-dev \
+              uuid-dev \
+              libgpgme11-dev \
+              squashfs-tools \
+              libseccomp-dev \
+              pkg-config && \
+            reboot
       BlockDeviceMappings:
           - DeviceName: /dev/sda1
             Ebs:
               VolumeType: 'gp2'
               VolumeSize: '24'
               Encrypted: 'false'
-
