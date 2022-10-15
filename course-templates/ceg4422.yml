@@ -54,7 +54,7 @@ Mappings:
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-06c1d7addb12a814e
+      HVM64: ami-072747b63d2046418 #HVM64: ami-06c1d7addb12a814e
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
@@ -302,5 +302,6 @@ Resources:
               VolumeType: 'gp2'
               VolumeSize: '16'
               Encrypted: 'false'
+
 
 
