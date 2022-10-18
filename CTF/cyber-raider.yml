@@ -11,8 +11,9 @@ Parameters:
     Type: String
     Default: t2.small
     AllowedValues:
-      - t2.micro
       - t2.small
+      - t3.small
+      - t3.medium
     ConstraintDescription: must be a valid EC2 instance type smaller than a t2.large.
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
@@ -31,6 +32,12 @@ Mappings:
     t2.micro:
       Arch: HVM64
     t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    t3.small:
+      Arch: HVM64
+    t3.medium:
       Arch: HVM64
 Resources:
   VPC:
