@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Air Camp 2019 AWS CloudFormation template: This template creates a VPC and adds 
-  an EC2 instance with an Elastic IP address and a security group configured with 
+  Air Camp 2021 AWS CloudFormation template: This template creates a VPC and adds
+  an EC2 instance with an Elastic IP address and a security group configured with
   a basic ruleset. This template only works in US-EAST 2 AWS region (Ohio).
-  **WARNING** This template creates an Amazon EC2 instance. 
+  **WARNING** This template creates an Amazon EC2 instance.
   You will be billed for the AWS resources used.
 Parameters:
   InstanceType:
@@ -80,12 +80,6 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet
       RouteTableId: !Ref RouteTable
-  IPAddress:
-    Type: 'AWS::EC2::EIP'
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref challenge1
   InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -102,13 +96,13 @@ Resources:
           CidrIp: 130.108.0.0/16
         - IpProtocol: -1
           CidrIp: 130.108.0.0/16
-        - IpProtocol: -1 
+        - IpProtocol: -1
           CidrIp: 10.0.0.0/24
   challenge1:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
-      ImageId: ami-043afbb02a10d435c
+      ImageId: ami-0c8f847175a9f2997
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       Tags:
@@ -128,14 +122,14 @@ Resources:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
-      ImageId: ami-071caf9ffba4729e0
-      InstanceType: !Ref InstanceType
+      ImageId: ami-0597441385aac8caa
+      InstanceType: t2.small
       KeyName: !Ref KeyName
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: challenge2 
+          Value: challenge2
       NetworkInterfaces:
         - GroupSet:
             - !Ref InstanceSecurityGroup
@@ -144,4 +138,3 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
-
