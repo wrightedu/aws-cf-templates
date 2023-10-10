@@ -1,13 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Testing area for AWS: This template builds a VPC with 2 Ubuntu servers, and windows server 2019 instance.
+  Cyber Security Template
 Parameters:
-  WS19InstanceType:
-    Description: Windows Server instance type
-    Type: String
-    Default: t2.small
-    AllowedValues:
-      - t2.small
   UbuntuInstanceType:
     Description: Ubuntu Server instance type
     Type: String
@@ -28,33 +22,12 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 Mappings:
   AWSInstanceType2Arch:  # Supported architectures (x64bit only)
-    t2.small:
-      Arch: HVM64
-    t2.small:
-      Arch: HVM64
     t2.micro:
       Arch: HVM64
-  AWSRegionWS19: # AMI for Win Server 2019 in each supported region 
-    us-east-1:   # N. Virginia
-      PV64: NOT_SUPPORTED
-      HVM64: ami-0d42fc1154bb95f55
-      HVMG2: NOT_SUPPORTED
-    us-east-2:   # Ohio
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
-    us-west-1:   # N. California
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
-    us-west-2:   # Oregon
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-072747b63d2046418 #HVM64: ami-06c1d7addb12a814e
+      HVM64: ami-053b0d53c279acc90 #HVM64: ami-072747b63d2046418
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
@@ -77,8 +50,8 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 4422 VPC
-  Subnet:
+          Value: CyberVPC
+  SubnetServers:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
@@ -86,12 +59,46 @@ Resources:
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: ServersSubnet
+  SubnetManagement:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: ManagementSubnet
+  SubnetPublic:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: PublicSubnet
+  SubnetVOIP:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: VOIPSubnet
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CyberInternetGateway
   AttachGateway:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
@@ -104,6 +111,8 @@ Resources:
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CyberRouteTable
   Route:
     Type: 'AWS::EC2::Route'
     DependsOn: AttachGateway
@@ -111,108 +120,152 @@ Resources:
       RouteTableId: !Ref RouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
-  SubnetRouteTableAssociation:
+  SubnetServersRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      SubnetId: !Ref Subnet
+      SubnetId: !Ref SubnetServers
       RouteTableId: !Ref RouteTable
-  Ubuntu1IPAddress:
+  SubnetManagementRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetManagement
+      RouteTableId: !Ref RouteTable
+  SubnetPublicRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPublic
+      RouteTableId: !Ref RouteTable
+  SubnetVOIPRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetVOIP
+      RouteTableId: !Ref RouteTable
+  Public1IPAddress:
     Type: 'AWS::EC2::EIP'
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
-      InstanceId: !Ref Ubuntu1Instance
-  Ubuntu2IPAddress:
-    Type: 'AWS::EC2::EIP'
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref Ubuntu2Instance
-  WS19IPAddress:
-    Type: 'AWS::EC2::EIP'
-    DependsOn: AttachGateway
-    Properties:
-      Domain: vpc
-      InstanceId: !Ref WS19Instance
-  LinuxSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Enable SSH access via port 22 and open ports 1025 through 2048.
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: tcp
-          FromPort: '1025'
-          ToPort: '2048'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '1025'
-          ToPort: '2048'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: -1
-          FromPort: '-1'
-          ToPort: '-1'
-          CidrIp: 10.0.0.0/16
-  WS19SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Enable SSH access via port 22 and Remote desktop via port 3389.
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: -1
-          FromPort: '3389'
-          ToPort: '3389'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: -1
-          FromPort: '3389'
-          ToPort: '3389'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: -1
-          FromPort: '-1'
-          ToPort: '-1'
-          CidrIp: 10.0.0.0/16
-  WS19Instance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn: AttachGateway
-    Properties:
-      ImageId: !FindInMap 
-        - AWSRegionWS19
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref WS19InstanceType
-          - Arch
-      InstanceType: !Ref WS19InstanceType
-      KeyName: !Ref KeyName
+      InstanceId: !Ref Public1Instance
       Tags:
-        - Key: Application
-          Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 4422 Windows Server 2019
-      NetworkInterfaces:
-        - GroupSet:
-            - !Ref WS19SecurityGroup
-          AssociatePublicIpAddress: 'true'
-          DeviceIndex: '0'
-          DeleteOnTermination: 'true'
-          SubnetId: !Ref Subnet
-          PrivateIpAddress: 10.0.0.30
-  Ubuntu1Instance:
+          Value: CyberPublicEIP
+  ServersSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 and above.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: ServersSecurityGroup
+  ManagementSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 and above.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: ManagementSecurityGroup
+  PublicSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 and above.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: PublicSecurityGroup
+  VOIPSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 and above.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '65535'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: VOIPSecurityGroup
+  Servers1Instance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
@@ -229,14 +282,14 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 4422 Ubuntu 1
+          Value: CyberServerInstance1
       NetworkInterfaces:
         - GroupSet:
-            - !Ref LinuxSecurityGroup
+            - !Ref ServersSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
-          SubnetId: !Ref Subnet
+          SubnetId: !Ref SubnetServers
           PrivateIpAddress: 10.0.0.20
       UserData:
         Fn::Base64:
@@ -244,20 +297,31 @@ Resources:
             #!/bin/bash -xe
             apt-get update && \
             apt-get install -y \
-              python \
-              nmap \
-              vim \
-              git \
-              wget \
-              python3-dev && \
+              git && \
+            git clone https://github.com/wrightedu/aws-cf-templates.git /home/ubuntu/aws-cf-templates && \
+            echo "This is from the CF template" > /home/ubuntu/hello.txt && \
             reboot
-      BlockDeviceMappings:
-          - DeviceName: /dev/sda1
-            Ebs:
-              VolumeType: 'gp2'
-              VolumeSize: '16'
-              Encrypted: 'false'
-  Ubuntu2Instance:
+  Management1Instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: ami-0790e5ec3f7516261
+      InstanceType: !Ref UbuntuInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CyberManagementInstance1
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref ManagementSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref SubnetManagement
+          PrivateIpAddress: 10.0.1.20
+  Public1Instance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
@@ -274,34 +338,58 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 4422 Ubuntu 2
+          Value: CyberPublicInstance1
       NetworkInterfaces:
         - GroupSet:
-            - !Ref LinuxSecurityGroup
+            - !Ref PublicSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
-          SubnetId: !Ref Subnet
-          PrivateIpAddress: 10.0.0.25
+          SubnetId: !Ref SubnetPublic
+          PrivateIpAddress: 10.0.2.20
       UserData:
         Fn::Base64:
           !Sub |
             #!/bin/bash -xe
             apt-get update && \
             apt-get install -y \
-              python \
-              nmap \
-              vim \
-              git \
-              wget \
-              python3-dev && \
+              git && \
+            git clone https://github.com/wrightedu/aws-cf-templates.git /home/ubuntu/aws-cf-templates && \
+            echo "This is from the CF template" > /home/ubuntu/hello.txt && \
             reboot
-      BlockDeviceMappings:
-          - DeviceName: /dev/sda1
-            Ebs:
-              VolumeType: 'gp2'
-              VolumeSize: '16'
-              Encrypted: 'false'
-
-
-
+  VOIP1Instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionUbuntu
+        - !Ref 'AWS::Region'
+        - !FindInMap 
+          - AWSInstanceType2Arch
+          - !Ref UbuntuInstanceType
+          - Arch
+      InstanceType: !Ref UbuntuInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CyberVOIPInstance1
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref VOIPSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref SubnetVOIP
+          PrivateIpAddress: 10.0.3.20
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              git && \
+            git clone https://github.com/wrightedu/aws-cf-templates.git /home/ubuntu/aws-cf-templates && \
+            echo "This is from the CF template" > /home/ubuntu/hello.txt && \
+            reboot
