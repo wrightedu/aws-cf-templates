@@ -102,7 +102,8 @@ Resources:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
-      ImageId: ami-0c8f847175a9f2997
+      ImageId: ami-04d01d6e4976431f1
+        #ImageId: ami-0c8f847175a9f2997
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       Tags:
@@ -122,7 +123,8 @@ Resources:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
-      ImageId: ami-0597441385aac8caa
+      ImageId: ami-0dedf70b24e3466ca
+        #ImageId: ami-0597441385aac8caa
       InstanceType: t2.small
       KeyName: !Ref KeyName
       Tags:
