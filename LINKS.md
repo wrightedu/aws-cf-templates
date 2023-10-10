@@ -17,4 +17,4 @@ Below are all links for current Cloud Formation templates.
 
 #### CTF
 
-* [3400 midterm review CTF](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ceg3400Lab&templateURL=https:%2F%2Fwsu-cecs-cf-templates.s3.us-east-2.amazonaws.com%2FCTF%2F3400-ctf.yml)
+* [3400 midterm review CTF](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=3400CTF-review&templateURL=https:%2F%2Fwsu-cecs-cf-templates.s3.us-east-2.amazonaws.com%2FCTF%2F3400-ctf.yml)
