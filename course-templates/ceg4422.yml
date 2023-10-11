@@ -305,7 +305,7 @@ Resources:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
-      ImageId: ami-0790e5ec3f7516261
+      ImageId: ami-024c22d5868672534
       InstanceType: !Ref UbuntuInstanceType
       KeyName: !Ref KeyName
       Tags:
