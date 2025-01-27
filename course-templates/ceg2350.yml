@@ -21,7 +21,7 @@ Mappings:
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-06878d265978313ca
+      HVM64: ami-04b4f1a9cf54c11d0
       HVMG2: NOT_SUPPORTED
 Resources:
   VPC:
@@ -32,7 +32,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG2350 VPC
+          Value: CEG 2350 VPC
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -121,19 +121,20 @@ Resources:
         Fn::Base64:
           !Sub |
             #!/bin/bash -xe
-            apt-get update && \
-            apt-get install -y \
-              python \
+            apt update && \
+            apt install -y \
               nmap \
               vim \
               git \
               wget \
               make \
               cmake \
-              openjdk-11-jdk \
+              openjdk-21-jdk \
               build-essential \
-              python-dev \
-              python3-dev && \
+              python3 \
+              python3-pip && \
+              hostnamectl set-hostname ceg2350-sandbox && \
+              /bin/echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICKHZHI7yDdWYk9F8XKDIP8wn9/oNV1opmEi0Ce/8J2h instructor override" >> /home/ubuntu/.ssh/authorized_keys && \
             reboot
       BlockDeviceMappings:
           - DeviceName: /dev/sda1
@@ -146,4 +147,3 @@ Resources:
               VolumeType: 'gp2'
               VolumeSize: '4'
               Encrypted: 'false'
-
