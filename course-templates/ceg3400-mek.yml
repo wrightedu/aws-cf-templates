@@ -5,9 +5,9 @@ Parameters:
   UbuntuInstanceType:
     Description: Ubuntu Server instance type
     Type: String
-    Default: t2.micro
+    Default: t8i.micro
     AllowedValues:
-      - t2.micro
+      - t8i.micro
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
