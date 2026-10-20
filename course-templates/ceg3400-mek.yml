@@ -22,11 +22,11 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 Mappings:
   AWSInstanceType2Arch:  # Supported architectures (x64bit only)
-    t2.small:
+    t8i.small:
       Arch: HVM64
-    t2.small:
+    t8i.small:
       Arch: HVM64
-    t2.micro:
+    t8i.micro:
       Arch: HVM64
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
