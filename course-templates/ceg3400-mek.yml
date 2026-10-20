@@ -72,7 +72,7 @@ Mappings:
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
       #HVM64: ami-06c1d7addb12a814e #old ami
-      HVM64: ami-072747b63d2046418 #new miniconda w/ scapy
+      HVM64: ami-0b6d9d3d33ba97d99
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
